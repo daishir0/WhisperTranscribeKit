@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audio Record and Transcribe</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+<script>
+  var socket = io.connect('https://your-server-addr.com/'); // あなたのサーバーアドレスを指定してください。
+
+  socket.on('transcription', function(data) {
+    var resultDiv = document.getElementById('transcriptionResult');
+    var now = new Date();
+    var week = ['日', '月', '火', '水', '木', '金', '土'];
+    var dateStr = `${now.getMonth()+1}月${now.getDate()}日（${week[now.getDay()]}） ${now.getHours()}時${now.getMinutes()}分`; // X月X日（X曜日）X時X分 形式
+    resultDiv.innerHTML += `<p>${dateStr}: ${data.text}</p>`; // 新しいテキストを下に追加
+  });
+</script>
+<style>
+  body {
+    padding: 20px;
+  }
+  .button-group {
+    margin-bottom: 20px;
+  }
+  #transcriptionResult {
+    border: 1px solid #ccc;
+    padding: 10px;
+    height: 300px;
+    overflow-y: scroll; /* スクロール可能に */
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1 class="text-center">Audio Record and Transcribe</h1>
+
+  <div class="button-group text-center">
+    <button class="btn btn-primary" onclick="startRecording()">Start Recording</button>
+    <button class="btn btn-secondary" onclick="stopRecording()" disabled>Stop Recording</button>
+    <button class="btn btn-info" onclick="toggleAutoRecord()" id="autoRecordBtn">Auto Record</button>
+  </div>
+
+  <div id="transcriptionResult" class="transcription-result"></div>
+</div>
+
+<script>
+let mediaRecorder;
+let autoRecordInterval;
+let isAutoRecording = false;
+let audioChunks = [];
+
+function startRecording() {
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+
+      mediaRecorder.addEventListener("dataavailable", event => {
+        audioChunks.push(event.data);
+      });
+
+      mediaRecorder.addEventListener("stop", () => {
+        const audioBlob = new Blob(audioChunks);
+        const formData = new FormData();
+        formData.append("audio_data", audioBlob);
+
+        fetch("/upload", { method: "POST", body: formData })
+          .then(response => response.json())
+          .then(data => {
+            console.log(data.message);
+          })
+          .catch(error => {
+            console.error(error.message);
+          });
+
+        audioChunks = [];
+      });
+
+      document.querySelector("button[onclick='startRecording()']").disabled = true;
+      document.querySelector("button[onclick='stopRecording()']").disabled = false;
+    })
+    .catch(error => {
+      console.error(error.message);
+    });
+}
+
+function stopRecording() {
+  mediaRecorder.stop();
+  document.querySelector("button[onclick='startRecording()']").disabled = false;
+  document.querySelector("button[onclick='stopRecording()']").disabled = true;
+}
+
+function toggleAutoRecord() {
+  let autoRecordButton = document.getElementById('autoRecordBtn');
+  if (!isAutoRecording) {
+    startRecording();
+    autoRecordButton.textContent = 'Stop Auto Record';
+    isAutoRecording = true;
+    autoRecordInterval = setInterval(() => {
+      stopRecording();
+      setTimeout(startRecording, 1000); // 1秒後に再開
+    }, 60000); // 1分ごとに録音を停止・再開
+  } else {
+    clearInterval(autoRecordInterval);
+    stopRecording();
+    autoRecordButton.textContent = 'Auto Record';
+    isAutoRecording = false;
+  }
+}
+</script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
+</body>
+</html>
