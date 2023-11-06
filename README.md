@@ -4,7 +4,7 @@
 WhisperTranscribeKit is a real-time audio transcription service leveraging OpenAI's Whisper model. It provides a web interface for recording audio and displays transcriptions live as they are processed.
 
 ## Installation
-- Clone the repository: `git clone <repository-url>`
+- Clone the repository: `git clone https://github.com/daishir0/WhisperTranscribeKit`
 - Install the required Python packages: `pip install -r requirements.txt`
 - Make sure `ffmpeg` is installed on your system for audio processing. On Ubuntu, you can install it with `sudo apt-get install ffmpeg`.
 
@@ -28,7 +28,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 WhisperTranscribeKitは、OpenAIのWhisperモデルを利用したリアルタイム音声転写サービスです。録音したオーディオのリアルタイムでの転写をウェブインターフェースで表示します。
 
 ## インストール方法
-- リポジトリをクローンします: `git clone <repository-url>`
+- リポジトリをクローンします: `git clone https://github.com/daishir0/WhisperTranscribeKit`
 - 必要なPythonパッケージをインストールします: `pip install -r requirements.txt`
 - 音声処理のためにシステムに`ffmpeg`がインストールされていることを確認してください。Ubuntuでは、`sudo apt-get install ffmpeg`でインストールできます。
 
